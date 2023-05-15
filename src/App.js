@@ -14,7 +14,7 @@ function UploadForm() {
     event.preventDefault();
 
     // Get a pre-signed URL for uploading the file
-    axios.get('/upload-url', { params: { filename: file.name } })
+    axios.get('http://localhost:8800/upload-url', { params: { filename: file.name } })
       .then(response => {
         const url = response.data.url;
         setUrl(url);
@@ -27,7 +27,7 @@ function UploadForm() {
         }).then(res => {
 
           console.log('File uploaded successfully!');
-          axios.get('/perm-url',{ params: { filename: file.name } }).then(res =>{
+          axios.get('http://localhost:8800/perm-url',{ params: { filename: file.name } }).then(res =>{
             setPermUrl(res.data);
           }).catch(error => {
             console.log(error);
