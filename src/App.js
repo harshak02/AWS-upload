@@ -1,62 +1,44 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-function UploadForm() {
-  const [file, setFile] = useState(null);
-  const [url, setUrl] = useState(null);
-  const [permUrl,setPermUrl] = useState(null);
+function App() {
+  const [pdfFile, setPdfFile] = useState(null);
 
-  const handleFileChange = (event) => {
-    setFile(event.target.files[0]);
+  const handlePdfUpload = (event) => {
+    const file = event.target.files[0];
+    setPdfFile(file);
   };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
+  const handleSubmit = async () => {
+    const formData = new FormData();
+    if (pdfFile) {
+      formData.append('pdf', pdfFile);
+    }
 
-    // Get a pre-signed URL for uploading the file
-    axios.get('http://localhost:8800/upload-url', { params: { filename: file.name } })
-      .then(response => {
-        const url = response.data.url;
-        setUrl(url);
-
-        // Use the pre-signed URL to upload the file
-        axios.put(url, file, {
-          headers: {
-            'Content-Type': file.type,
-          },
-        }).then(res => {
-
-          console.log('File uploaded successfully!');
-          axios.get('http://localhost:8800/perm-url',{ params: { filename: file.name } }).then(res =>{
-            setPermUrl(res.data);
-          }).catch(error => {
-            console.log(error);
-          });
-
-        }).catch(error => {
-          console.log(error);
-        });
-      })
-      .catch(error => {
-        console.log(error);
-      });
+    try {
+      await axios.post('http://localhost:5000/upload', formData);
+      console.log('Files uploaded successfully');
+      // Reset form after successful upload
+      setPdfFile(null);
+    } catch (error) {
+      console.error('Error uploading files:', error);
+    }
   };
 
   return (
-    <div>
-      <h1>Upload File to Scan</h1>
-      <form onSubmit={handleSubmit}>
-        <input type="file" onChange={handleFileChange} />
-        <button type="submit">Upload</button>
-        {url && (
-          <p>File uploaded to bucket : {url}</p>
-        )}
-        {permUrl && (
-          <p>File's permanent Url is : {permUrl}</p>
-        )}
-      </form>
+    <div className="App">
+      <h1>File Upload</h1>
+      <div>
+        <h2>Upload PDF</h2>
+        <input type="file" accept=".pdf" onChange={handlePdfUpload} />
+        {pdfFile && <p>Selected PDF: {pdfFile.name}</p>}
+        <button onClick={() => setPdfFile(null)}>Clear PDF</button>
+      </div>
+      <button onClick={handleSubmit}>
+        Submit
+      </button>
     </div>
   );
 }
 
-export default UploadForm;
+export default App;
